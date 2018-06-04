@@ -1,0 +1,12 @@
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+IndentWidth: 4
+UseTab: Never
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+SortIncludes: false
+AlwaysBreakTemplateDeclarations: true
+AlwaysBreakAfterReturnType: All
+AllowShortFunctionsOnASingleLine: false
+ColumnLimit: 100
