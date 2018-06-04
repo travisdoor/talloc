@@ -1,45 +1,72 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# talloc 
+Author: Martin Dorazil
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+Year: 2017
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+Current version: 1.4.0
 
----
+## Introduction
+Custom thread-safe malloc implementation with pooling of small objects (~2KB) and fast AVL tree based best-fit memory allocation written in C.
 
-## Edit a file
+## Change log
+  * 1.4.0 Add exception method setter. 
+  * 1.3.0 Add exception handling and checking for invalid pointer freeing.
+  * 1.2.0 Locking in pool and MSVC support.
+  * 1.1.1 Fix aba problem random crashes in multithread pool access.
+  * 1.1.0 Add talloc_force_reset method.
+  * 1.0.1 Add documentation and minor bug fixes.
+  * 1.0.0 Initial version.
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+## How to use
+### Building 
+#### Supported compilers
+  * GCC
+  * clang
+  * MinGW
+  * MSVC
+#### MacOS or Linux
+Build the project with cmake.
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+```
+#### Windows
+Build talloc on windows with MinGW using cmake.
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. -G"MinGW Makefiles"
+cmake --build . --config Release
+```
+To use the dll with MSVC you must create lib file first with lib.exe utility. [Guide here.](http://www.mingw.org/wiki/MSVC_and_MinGW_DLLs)
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+Build talloc on windows with MSVC using cmake.
+```bash
+mkdir build
+cd build
+cmake .. -G"Visual Studio 15 Win64"
+cmake --build . --config Release
+```
 
----
+### Linking
+Link libtalloc library and include include/talloc.h interface.
 
-## Create a file
+### Usage
+```c
+#include "talloc.h"
 
-Next, you’ll add a new file to this repository.
+// allocation
+foo_t *foo = (foo_t *)tmalloc(sizeof(foo_t));
+// some useful stuff
+tfree(foo);
+foo = NULL;
+```
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+## Other
+Large memory chunk is preallocated on first call of tmalloc. Every next allocation lives only in this preallocated space (see config.h). When the allocator gets out of free space, new large block is preallocated. Preallocation can be done manually using talloc_expand method.
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+Memory allocations under TALLOC_SMALL_TO (defined in talloc_config.h) are organized into pools. Call talloc_optimize to free unused pools.
 
----
-
-## Clone a repository
-
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
-
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
-
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+Preallocated memory will never be returned to system automatically, you can use talloc_force_reset method (can be enabled in config.h) to free system memory and reset allocator to initial state (make sure that already allocated memory will never be used after reset). The memory will be returned back to system on application exit on most platforms.
